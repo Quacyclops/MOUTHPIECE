@@ -1,0 +1,5 @@
+# Local environment variables
+.env
+.env.local
+__pycache__/
+.pytest_cache/
