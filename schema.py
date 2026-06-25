@@ -144,7 +144,7 @@ if __name__ == "__main__":
 
     # Validate incoming payload
     validated_inbound = InboundLeadPayload(**sample_inbound_json)
-    print("✅ Inbound Payload Correctly Validated Structure.")
+    print(" Inbound Payload Correctly Validated Structure.")
     print(f"Analyzing data for: {validated_inbound.first_name} at {validated_inbound.company_name}")
     print(f"Critical telemetry points to ingest: {validated_inbound.telemetry.recent_critical_events[0].event_name}\n")
 
@@ -159,5 +159,5 @@ if __name__ == "__main__":
 
     # Validate outgoing response payload
     validated_outbound = OutboundEmailDraft(**sample_llm_outbound)
-    print("🚀 Outbound Email Schema Cleared For Dispatch Queue.")
+    print(" Outbound Email Schema Cleared For Dispatch Queue.")
     print(f"Subject Line: {validated_outbound.subject_line}")
