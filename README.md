@@ -1,2 +1,2 @@
 # MOUTHPIECE
-Mouthpiece is an NPC dynamic dialogue generator 
+Mouthpiece is a personalized email automation workflow 
