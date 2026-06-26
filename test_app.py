@@ -42,10 +42,12 @@ async def test_webhook_ingress_triggers_hydration_and_accepts(client):
         "custom_instructions": "Keep it concise"
     }
 
-    # Override env endpoints inside the testing context if necessary
+    headers = {"X-API-Token": "your_ultra_secure_secret_token_here"}
+
     with patch("os.getenv", side_effect=lambda k: {
         "N8N_THREAD_HYDRATION_URL": "https://mock-n8n-url.com/hydration",
-        "N8N_EMAIL_DISPATCH_URL": "https://mock-n8n-url.com/dispatch"
+        "N8N_EMAIL_DISPATCH_URL": "https://mock-n8n-url.com/dispatch",
+        "API_BEARER_TOKEN": "your_ultra_secure_secret_token_here"
     }.get(k)):
         response = client.post("/webhook/ingress", json=dummy_payload)
 
