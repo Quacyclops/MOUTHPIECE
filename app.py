@@ -1,10 +1,11 @@
 import asyncio
 import os
 import instructor
+from fastapi.security import APIKeyHeader
 from openai import AsyncOpenAI
 from contextlib import asynccontextmanager
 from typing import Dict, Any
-from fastapi import FastAPI, BackgroundTasks, HTTPException, status
+from fastapi import FastAPI, BackgroundTasks, Security, HTTPException, status
 import httpx
 from dotenv import load_dotenv
 
@@ -21,6 +22,11 @@ async def lifespan(app:FastAPI):
 
 app = FastAPI(title="Email Context State Machine", lifespan=lifespan)
 
+API_KEY_NAME = "X-API-Token"
+api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
+
+API_BEARER_TOKEN = os.getenv("API_BEARER_TOKEN")
+
 ai_client = instructor.from_openai(AsyncOpenAI())
 MAX_CONCURRENT_TASKS = 10
 rate_limit_semaphore = asyncio.Semaphore(MAX_CONCURRENT_TASKS)
@@ -32,6 +38,15 @@ if not N8N_HYDRATION_URL or not N8N_EMAIL_DISPATCHER:
     raise RuntimeError("System Boot Error: Missing required n8n webhook environment variables.")
 
 # ASYNC I/O WORKERS (Context Gathering)
+
+async def validate_api_key(api_key: str = Security(api_key_header)):
+    """Validates the incoming header token against the environment secret."""
+    if not api_key or api_key != API_BEARER_TOKEN:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or missing API validation token."
+        )
+    return api_key
 
 async def fetch_context_from_n8n(lead_email: str, crm_id: str) -> Dict[str, Any]:
     """
@@ -142,8 +157,10 @@ async def process_llm_pipeline(lead: InboundLeadPayload, hydration_data: Dict[st
 
 # FASTAPI INGESTION GATEWAY
 @app.post("/webhook/ingress", status_code=status.HTTP_202_ACCEPTED)
-async def handle_webhook_ingress(payload: InboundLeadPayload, background_tasks: BackgroundTasks):
-    print(f"Received data payload for lead: {payload.email}")
+async def handle_webhook_ingress(payload: InboundLeadPayload, background_tasks: BackgroundTasks,
+                                 _ = Security(validate_api_key)
+                                 ):
+    print(f" Secure authenticated data access verified for lead: {payload.email}")
 
     hydration_data = await fetch_context_from_n8n(payload.email, payload.crm_contact_id)
 
